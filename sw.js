@@ -1,6 +1,6 @@
 // ATENÇÃO: Toda vez que você atualizar o index.html, mude o número da versão aqui!
 // Exemplo: 'calc-hidro-v2', 'calc-hidro-v3', etc.
-const CACHE_NAME = 'calc-hidro-v0'; 
+const CACHE_NAME = 'calc-hidro-v0.1'; 
 
 const urlsToCache = [
   './',
