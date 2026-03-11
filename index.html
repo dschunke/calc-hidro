@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferramenta de Cálculo</title>
+
+	<link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0056b3">
+    <link rel="apple-touch-icon" href="icon-192.png">
+	
+    <style>
+        /* Estilos Mobile-First (mantidos) */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container-mobile {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #0056b3;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #333;
+            font-size: 1.2em;
+            text-align: center;
+            margin-top: 0;
+        }
+        fieldset {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+        legend {
+            font-weight: bold;
+            color: #0056b3;
+            padding: 0 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        input[type="number"], input[type="text"], select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+            appearance: none;
+        }
+        input[readonly] {
+            background-color: #e9ecef;
+            font-weight: bold;
+            color: #28a745;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button.calculo {
+            background-color: #28a745;
+        }
+        button.limpar {
+            background-color: #ffc107; 
+            color: #343a40;
+        }
+        button.voltar {
+            background-color: #6c757d;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        .nota-unidades {
+            font-size: 0.8em;
+            color: #6c757d;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        /* Estilo para botões do menu e radio buttons */
+        .menu-button {
+            height: 60px;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        .radio-group {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            border: 1px solid #0056b3;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        .radio-group label {
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.9em; 
+        }
+        .radio-group input[type="radio"] {
+            margin-right: 5px;
+            width: auto;
+            margin-bottom: 0;
+        }
+        .campo-oculto {
+            display: none !important;
+        }
+
+        /* Estilos de input em linha (mantidos) */
+        .input-inline-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+        .input-inline-wrapper select {
+            width: 120px;
+            flex-shrink: 0;
+        }
+        .input-inline-wrapper input[type="number"] {
+            margin-bottom: 0;
+        }
+
+        /* Estilos para a seção de Área (mantidos) */
+        .area-input-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 10px;
+            margin-bottom: 15px;
+            border: 1px dashed #ced4da;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .area-input-group > div {
+            flex: 1 1 45%; 
+        }
+        .area-input-group .input-resultado {
+            flex: 1 1 100%; 
+        }
+        .total-area-result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body onload="showSection('menu')">
+
+<div class="container-mobile">
+    <h1>Ferramenta de Cálculos</h1>
+
+    <section id="menu" class="section">
+        <h2>Menu Principal</h2>
+        <button class="menu-button" onclick="showSection('afinidade')">1. Cálculo de Afinidade de Bombas</button>
+        <button class="menu-button" onclick="showSection('polias')">2. Cálculo de Relação entre Polias</button>
+        <button class="menu-button" onclick="showSection('velocidade')">3. Cálculo de Velocidade do Fluido</button>
+        <button class="menu-button" onclick="showSection('area_circulo')">4. Cálculo de Área de Círculos</button>
+        <button class="menu-button" onclick="showSection('hazen_williams')">5. Perda de Carga (Hazen-Williams)</button> 
+    </section>
+    
+    <section id="afinidade" class="section" style="display:none;">
+        <h2>Cálculo de Afinidade de Bombas</h2>
+        
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="afinidade_mode" value="RPM_D" checked onchange="mudarModoAfinidade()"> Alterar RPM e Diâmetro
+            </label>
+            <label>
+                <input type="radio" name="afinidade_mode" value="RPM_Only" onchange="mudarModoAfinidade()"> Alterar só RPM
+            </label>
+        </div>
+
+        <fieldset>
+            <legend>Condição Requerida - Valores Iniciais</legend>
+            <label for="rpm1">RPM 1 :</label>
+            <input type="number" id="rpm1" placeholder= "RPM do Motor combustão - Ex: 3000">
+            
+            <label for="vazao1">Vazão 1 (Q1):</label>
+            <input type="number" id="vazao1" placeholder="Ex: 10 (unidade de Vazão)">
+            
+            <label for="pressao1">Pressão 1 (H1 - Altura Manométrica):</label>
+            <input type="number" id="pressao1" placeholder="Ex: 20 (unidade de Pressão)">
+            
+            <div id="campo_d1" class="campo-diametro">
+                <label for="diametro1">Diâmetro 1 (D1 - Rotor):</label>
+                <input type="number" id="diametro1" placeholder="Ex: 300 (mm)">
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Condição Padrão - Defina N2 e D2</legend>
+            <label for="rpm2">RPM 2 :</label>
+            <input type="number" id="rpm2" placeholder="RPM Padrão da motobomba - Ex: 3500, 1750">
+          
+            <div id="campo_d2" class="campo-diametro">
+                <label for="diametro2">Diâmetro 2 (D2) Desejado:</label>
+                <input type="number" id="diametro2" placeholder="Ex: 280 (mm)">
+            </div>
+        </fieldset>
+
+        <button class="calculo" onclick="calcularAfinidade()">CALCULAR Condição 2</button>
+
+        <fieldset class="resultado">
+            <legend>Condição 2 (Resultado Calculado)</legend>
+            <label for="vazao2">Vazão 2 (Q2) Calculada:</label>
+            <input type="text" id="vazao2" readonly>
+            
+            <label for="pressao2">Pressão 2 (H2) Calculada:</label>
+            <input type="text" id="pressao2" readonly>
+            <p class="nota-unidades">As unidades de Q2 e H2 são as mesmas de Q1 e H1.</p>
+        </fieldset>
+        
+        <button class="voltar" onclick="showSection('menu')">Voltar ao Menu</button>
+    </section>
+
+    <section id="polias" class="section" style="display:none;">
+        <h2>Cálculo de Relação entre Polias</h2>
+        
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="calc_mode" value="D2" checked onchange="mudarModoPolias()"> Calcular Diâmetro 2 (D2)
+            </label>
+            <label>
+                <input type="radio" name="calc_mode" value="N2" onchange="mudarModoPolias()"> Calcular RPM 2 (N2)
+            </label>
+        </div>
+        
+        <fieldset>
+            <legend>Dados de Entrada</legend>
+            
+            <label for="polias_d1">Diâmetro Polia 1 (D1 - Motora):</label>
+            <input type="number" id="polias_d1" placeholder="Ex: 300 (mm)">
+
+            <label for="polias_n1">RPM Polia 1 (N1 - Motora):</label>
+            <input type="number" id="polias_n1" placeholder="Ex: 1750 (RPM)">
+            
+            <div id="campo_variavel_polias">
+            </div>
+            
+        </fieldset>
+
+        <button class="calculo" onclick="calcularPolias()">CALCULAR</button>
+        
+        <fieldset class="resultado">
+            <legend>Resultado</legend>
+            <label for="polias_resultado" id="label_resultado">Resultado:</label>
+            <input type="text" id="polias_resultado" readonly>
+            <p class="nota-unidades">A fórmula usada é: D1 * N1 = D2 * N2. As unidades de diâmetro (D) e RPM (N) devem ser consistentes.</p>
+        </fieldset>
+
+        <button class="voltar" onclick="showSection('menu')">Voltar ao Menu</button>
+    </section>
+
+    <section id="velocidade" class="section" style="display:none;">
+        <h2>Cálculo de Velocidade / Vazão</h2>
+
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="calc_vaz_mode" value="V" checked onchange="mudarModoVelocidade()"> Calcular Velocidade (V)
+            </label>
+            <label>
+                <input type="radio" name="calc_vaz_mode" value="Q" onchange="mudarModoVelocidade()"> Calcular Vazão (Q)
+            </label>
+        </div>
+        
+        <fieldset>
+            <legend>Dados de Entrada</legend>
+            
+            <div id="campo_vazao_v">
+            </div>
+            
+            <label for="diametro_tubo">Diâmetro do Tubo (D) em mm:</label>
+            <input type="number" id="diametro_tubo" placeholder="Ex: 50">
+        </fieldset>
+
+        <button class="calculo" onclick="calcularVelocidade()">CALCULAR</button>
+
+        <fieldset class="resultado">
+            <legend>Resultado</legend>
+            <label for="velocidade_v" id="label_vazao_v_resultado">Resultado:</label>
+            <input type="text" id="velocidade_v" readonly>
+        </fieldset>
+
+        <button class="voltar" onclick="showSection('menu')">Voltar ao Menu</button>
+    </section>
+
+    <section id="area_circulo" class="section" style="display:none;">
+        <h2>Cálculo de Área de Círculos</h2>
+
+        <fieldset>
+            <legend>Configuração de Unidades</legend>
+            <label for="unidade_entrada">Unidade do Diâmetro de Entrada (D):</label>
+            <select id="unidade_entrada">
+                <option value="m">Metro (m)</option>
+                <option value="mm" selected>Milímetro (mm)</option>
+                <option value="cm">Centímetro (cm)</option>
+            </select>
+
+            <label for="unidade_saida">Unidade da Área de Saída (A):</label>
+            <select id="unidade_saida">
+                <option value="m2" selected>Metro Quadrado (m²)</option>
+                <option value="mm2">Milímetro Quadrado (mm²)</option>
+                <option value="cm2">Centímetro Quadrado (cm²)</option>
+            </select>
+        </fieldset>
+
+        <fieldset>
+            <legend>Entradas e Resultados</legend>
+
+            <div class="area-input-group">
+                <div>
+                    <label for="diametro_c1">Diâmetro (D1):</label>
+                    <input type="number" id="diametro_c1" placeholder="Ex: 500">
+                </div>
+                <div class="input-resultado">
+                    <label for="area_c1">Área 1 (A1):</label>
+                    <input type="text" id="area_c1" readonly>
+                </div>
+            </div>
+
+            <div class="area-input-group">
+                <div>
+                    <label for="diametro_c2">Diâmetro (D2):</label>
+                    <input type="number" id="diametro_c2" placeholder="Opcional">
+                </div>
+                <div class="input-resultado">
+                    <label for="area_c2">Área 2 (A2):</label>
+                    <input type="text" id="area_c2" readonly>
+                </div>
+            </div>
+
+            <div class="area-input-group">
+                <div>
+                    <label for="diametro_c3">Diâmetro (D3):</label>
+                    <input type="number" id="diametro_c3" placeholder="Opcional">
+                </div>
+                <div class="input-resultado">
+                    <label for="area_c3">Área 3 (A3):</label>
+                    <input type="text" id="area_c3" readonly>
+                </div>
+            </div>
+
+        </fieldset>
+
+        <button class="calculo" onclick="calcularAreaCirculo()">CALCULAR ÁREAS</button>
+        <button class="limpar" onclick="limparCamposAreaCirculo()">LIMPAR CAMPOS</button> 
+
+        <fieldset class="resultado total-area-result">
+            <legend>Total e Equivalência</legend>
+            <label for="area_total">Soma Total das Áreas:</label>
+            <input type="text" id="area_total" readonly>
+            
+            <label for="diametro_equivalente">Diâmetro Equivalente ($D_{eq}$):</label>
+            <input type="text" id="diametro_equivalente" readonly>
+            
+            <p class="nota-unidades">A área é calculada pela fórmula: $A = \pi \cdot (D/2)^2$.</p>
+        </fieldset>
+
+        <button class="voltar" onclick="showSection('menu')">Voltar ao Menu</button>
+    </section>
+
+    <section id="hazen_williams" class="section" style="display:none;">
+        <h2>Cálculo de Perda de Carga (Hazen-Williams)</h2>
+        
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="hw_input_mode" value="D" checked onchange="mudarModoHazenWilliams()"> Entrada por Diâmetro (D)
+            </label>
+            <label>
+                <input type="radio" name="hw_input_mode" value="A" onchange="mudarModoHazenWilliams()"> Entrada por Área (A)
+            </label>
+        </div>
+
+        <fieldset>
+            <legend>Dados de Entrada</legend>
+
+            <label for="hw_comprimento">Comprimento da Tubulação (L):</label>
+            <div class="input-inline-wrapper">
+                <input type="number" id="hw_comprimento" placeholder="Ex: 100">
+                <select id="hw_unidade_L">
+                    <option value="m">metros (m)</option>
+                    <option value="km">quilômetros (km)</option>
+                </select>
+            </div>
+            
+            <div id="hw_campo_D_ou_A">
+                </div>
+
+            <label for="hw_vazao">Vazão (Q):</label>
+            <div class="input-inline-wrapper">
+                <input type="number" id="hw_vazao" placeholder="Ex: 10">
+                <select id="hw_unidade_Q">
+                    <option value="m3/s">m³/s</option>
+                    <option value="L/s" selected>L/s</option>
+                    <option value="m3/h">m³/h</option>
+                </select>
+            </div>
+            
+            <label for="hw_coeficiente_C">Coeficiente Hazen-Williams (C):</label>
+            <input type="number" id="hw_coeficiente_C" placeholder="Ex: 140 (PVC), 100 (Ferro fundido)">
+            <p class="nota-unidades">O coeficiente C varia com o material. Ex: PVC novo ≈ 140, Aço novo ≈ 120.</p>
+        </fieldset>
+
+        <button class="calculo" onclick="calcularHazenWilliams()">CALCULAR PERDA DE CARGA</button>
+        <button class="limpar" onclick="limparCamposHazenWilliams()">LIMPAR CAMPOS</button> 
+
+        <fieldset class="resultado">
+            <legend>Resultado da Perda de Carga</legend>
+            <label for="hw_resultado">Perda de Carga ($h_f$):</label>
+            <input type="text" id="hw_resultado" readonly>
+            <p class="nota-unidades">Resultado em Metros de Coluna D'água (m.c.a.)</p>
+        </fieldset>
+
+        <button class="voltar" onclick="showSection('menu')">Voltar ao Menu</button>
+    </section>
+
+</div>
+
+<script>
+    // Variáveis e Constantes de Conversão (mantidas)
+
+    const CONV_FACTORS = {
+        'm3/s': 1, 'L/s': 1000, 'm3/h': 3600, 'L/min': 60000 
+    };
+
+    const DIAMETER_CONV_TO_M = {
+        'm': 1, 'mm': 0.001, 'cm': 0.01
+    };
+
+    const LENGTH_CONV_TO_M = {
+        'm': 1, 'km': 1000
+    };
+
+    const AREA_CONV_TO_M2 = {
+        'm2': 1, 'mm2': 1000000, 'cm2': 10000
+    };
+    
+    const AREA_CONV_FROM_M2 = {
+        'm2': 1, 'mm2': 1 / 1000000, 'cm2': 1 / 10000 
+    };
+
+    let polias_D2_input = null;
+    let polias_N2_input = null;
+    let vazao_Q_input = null;
+    let unidade_Q_select = null;
+    let velocidade_V_input = null;
+
+    // --- Funções de Navegação e Auxiliares ---
+
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(section => {
+            section.style.display = 'none';
+        });
+        document.getElementById(id).style.display = 'block';
+
+        if (id === 'afinidade') {
+            mudarModoAfinidade(); 
+        } else if (id === 'polias') {
+            mudarModoPolias();
+        } else if (id === 'velocidade') {
+            mudarModoVelocidade();
+        } else if (id === 'hazen_williams') {
+            mudarModoHazenWilliams();
+        }
+    }
+
+    // --- CÁLCULO 1: Afinidade de Bombas (CORRIGIDO) ---
+    // A lógica de cálculo foi verificada e restaurada.
+
+    function mudarModoAfinidade() {
+        const modo = document.querySelector('#afinidade input[name="afinidade_mode"]:checked').value;
+        const campoD1 = document.getElementById('campo_d1');
+        const campoD2 = document.getElementById('campo_d2');
+        
+        // Limpa os resultados ao trocar de modo
+        document.getElementById('vazao2').value = "";
+        document.getElementById('pressao2').value = "";
+
+        if (modo === 'RPM_Only') {
+            campoD1.classList.add('campo-oculto');
+            campoD2.classList.add('campo-oculto');
+        } else {
+            campoD1.classList.remove('campo-oculto');
+            campoD2.classList.remove('campo-oculto');
+        }
+    }
+
+    function calcularAfinidade() {
+        const modo = document.querySelector('#afinidade input[name="afinidade_mode"]:checked').value;
+
+        const N1 = parseFloat(document.getElementById('rpm1').value);
+        const Q1 = parseFloat(document.getElementById('vazao1').value);
+        const H1 = parseFloat(document.getElementById('pressao1').value);
+        const N2 = parseFloat(document.getElementById('rpm2').value);
+
+        let D1, D2, Fator_RPM, Fator_Diametro, Q2, H2;
+
+        if (modo === 'RPM_Only') {
+            // Modo 1: Apenas RPM
+            if (isNaN(N1) || isNaN(Q1) || isNaN(H1) || isNaN(N2) || N1 === 0) {
+                document.getElementById('vazao2').value = "Erro";
+                document.getElementById('pressao2').value = "Erro";
+                alert("Por favor, preencha RPM 1, Vazão 1, Pressão 1 e RPM 2. RPM 1 não pode ser zero.");
+                return;
+            }
+            
+            Fator_RPM = N2 / N1;
+            
+            // Q2 = Q1 * (N2/N1)
+            Q2 = Q1 * Fator_RPM;
+            // H2 = H1 * (N2/N1)²
+            H2 = H1 * Math.pow(Fator_RPM, 2);
+
+        } else {
+            // Modo 2: RPM e Diâmetro
+            D1 = parseFloat(document.getElementById('diametro1').value);
+            D2 = parseFloat(document.getElementById('diametro2').value);
+
+            if (isNaN(N1) || isNaN(Q1) || isNaN(H1) || isNaN(D1) || isNaN(N2) || isNaN(D2) || N1 === 0 || D1 === 0) {
+                document.getElementById('vazao2').value = "Erro";
+                document.getElementById('pressao2').value = "Erro";
+                alert("Por favor, preencha todos os campos com valores numéricos válidos. RPM 1 e Diâmetro 1 não podem ser zero.");
+                return;
+            }
+
+            Fator_RPM = N2 / N1;
+            Fator_Diametro = D2 / D1;
+
+            // Q2 = Q1 * (N2/N1) * (D2/D1)
+            Q2 = Q1 * Fator_RPM * Fator_Diametro;
+            // H2 = H1 * (N2/N1)² * (D2/D1)²
+            H2 = H1 * Math.pow(Fator_RPM, 2) * Math.pow(Fator_Diametro, 2);
+        }
+
+        document.getElementById('vazao2').value = Q2.toFixed(2);
+        document.getElementById('pressao2').value = H2.toFixed(2);
+    }
+
+    // --- CÁLCULO 2: Relação de Polias (mantido) ---
+
+    function mudarModoPolias() {
+        const modo = document.querySelector('#polias input[name="calc_mode"]:checked').value;
+        const campoVariavelDiv = document.getElementById('campo_variavel_polias');
+        const resultadoLabel = document.getElementById('label_resultado');
+        const resultadoInput = document.getElementById('polias_resultado');
+
+        resultadoInput.value = ""; 
+        let htmlContent = '';
+
+        if (modo === 'D2') {
+            htmlContent = `
+                <label for="polias_n2_input">RPM Polia 2 (N2 - Movida):</label>
+                <input type="number" id="polias_n2_input" placeholder="Ex: 1500 (RPM)">
+            `;
+            resultadoLabel.textContent = "Diâmetro Polia 2 (D2) Calculado:";
+            
+        } else {
+            htmlContent = `
+                <label for="polias_d2_input">Diâmetro Polia 2 (D2 - Movida):</label>
+                <input type="number" id="polias_d2_input" placeholder="Ex: 200 (mm)">
+            `;
+            resultadoLabel.textContent = "RPM Polia 2 (N2) Calculada:";
+        }
+
+        campoVariavelDiv.innerHTML = htmlContent;
+
+        polias_D2_input = document.getElementById('polias_d2_input');
+        polias_N2_input = document.getElementById('polias_n2_input');
+    }
+
+    function calcularPolias() {
+        const D1 = parseFloat(document.getElementById('polias_d1').value);
+        const N1 = parseFloat(document.getElementById('polias_n1').value);
+        const modo = document.querySelector('#polias input[name="calc_mode"]:checked').value;
+        const resultadoInput = document.getElementById('polias_resultado');
+        
+        let resultado = 0;
+        let valor_var; 
+
+        resultadoInput.value = "";
+        
+        if (modo === 'D2') {
+            valor_var = parseFloat(document.getElementById('polias_n2_input').value); 
+
+            if (isNaN(D1) || isNaN(N1) || isNaN(valor_var) || valor_var === 0) {
+                alert("Preencha D1, N1 e a RPM Movida (N2) com valores válidos. N2 não pode ser zero.");
+                return;
+            }
+            resultado = (D1 * N1) / valor_var;
+            
+        } else {
+            valor_var = parseFloat(document.getElementById('polias_d2_input').value);
+
+            if (isNaN(D1) || isNaN(N1) || isNaN(valor_var) || valor_var === 0) {
+                alert("Preencha D1, N1 e o Diâmetro Movido (D2) com valores válidos. D2 não pode ser zero.");
+                return;
+            }
+            resultado = (D1 * N1) / valor_var;
+        }
+
+        resultadoInput.value = resultado.toFixed(2);
+    }
+    
+    // --- CÁLCULO 3: Velocidade / Vazão (mantido) ---
+
+    function mudarModoVelocidade() {
+        const modo = document.querySelector('#velocidade input[name="calc_vaz_mode"]:checked').value;
+        const campoVazaoVDiv = document.getElementById('campo_vazao_v');
+        const resultadoLabel = document.getElementById('label_vazao_v_resultado');
+        const resultadoInput = document.getElementById('velocidade_v');
+
+        resultadoInput.value = ""; 
+        let htmlContent = '';
+
+        if (modo === 'V') {
+            htmlContent = `
+                <label for="vazao_q">Vazão (Q):</label>
+                <div class="input-inline-wrapper">
+                    <input type="number" id="vazao_q" placeholder="Ex: 10">
+                    <select id="unidade_q">
+                        <option value="m3/h">m³/h</option>
+                        <option value="m3/s">m³/s</option>
+                        <option value="L/s">L/s</option>
+                        <option value="L/min">L/min</option>
+                    </select>
+                </div>
+            `;
+            resultadoLabel.textContent = "Velocidade (V) em m/s:";
+            
+        } else {
+            htmlContent = `
+                <label for="velocidade_v_input">Velocidade (V) em m/s:</label>
+                <input type="number" id="velocidade_v_input" placeholder="Ex: 2.5">
+                
+                <label for="unidade_q">Unidade de Vazão de Saída:</label>
+                <select id="unidade_q">
+                    <option value="m3/h">m³/h</option>
+                    <option value="m3/s">m³/s</option>
+                    <option value="L/s">L/s</option>
+                    <option value="L/min">L/min</option>
+                </select>
+            `;
+            resultadoLabel.textContent = "Vazão (Q) Calculada:";
+        }
+
+        campoVazaoVDiv.innerHTML = htmlContent;
+
+        vazao_Q_input = document.getElementById('vazao_q');
+        unidade_Q_select = document.getElementById('unidade_q');
+        velocidade_V_input = document.getElementById('velocidade_v_input');
+    }
+
+    function calcularVelocidade() {
+        const modo = document.querySelector('#velocidade input[name="calc_vaz_mode"]:checked').value;
+        const D_mm = parseFloat(document.getElementById('diametro_tubo').value);
+        const resultadoInput = document.getElementById('velocidade_v');
+
+        resultadoInput.value = "";
+
+        if (isNaN(D_mm) || D_mm <= 0) {
+            alert("Preencha o Diâmetro do Tubo com um valor numérico válido maior que zero.");
+            return;
+        }
+
+        const R_m = D_mm / 2000;
+        const Area_m2 = Math.PI * Math.pow(R_m, 2);
+
+        if (modo === 'V') {
+            const Q_input = parseFloat(vazao_Q_input.value);
+            const unidade_Q = unidade_Q_select.value;
+
+            if (isNaN(Q_input)) {
+                alert("Preencha o valor da Vazão (Q).");
+                return;
+            }
+            
+            const Q_m3_s = Q_input / CONV_FACTORS[unidade_Q];
+            const V = Area_m2 > 0 ? Q_m3_s / Area_m2 : 0;
+            
+            resultadoInput.value = V.toFixed(2) + ' m/s';
+            
+        } else {
+            const V_input = parseFloat(velocidade_V_input.value);
+            const unidade_saida = unidade_Q_select.value;
+            
+            if (isNaN(V_input)) {
+                alert("Preencha o valor da Velocidade (V).");
+                return;
+            }
+
+            const Q_m3_s = Area_m2 * V_input;
+            const Q_final = Q_m3_s * CONV_FACTORS[unidade_saida];
+
+            resultadoInput.value = Q_final.toFixed(2) + ' ' + unidade_saida;
+        }
+    }
+    
+    // --- CÁLCULO 4: Área de Círculos (mantido) ---
+
+    function calcularAreaCirculo() {
+        const unidadeEntrada = document.getElementById('unidade_entrada').value;
+        const unidadeSaida = document.getElementById('unidade_saida').value;
+        const diametrosIds = ['diametro_c1', 'diametro_c2', 'diametro_c3'];
+        const areasIds = ['area_c1', 'area_c2', 'area_c3'];
+        let areaTotalM2 = 0;
+
+        areasIds.forEach(id => document.getElementById(id).value = '');
+        document.getElementById('area_total').value = '';
+        document.getElementById('diametro_equivalente').value = '';
+
+        const decimalPlaces = unidadeSaida === 'm2' ? 5 : 2;
+        const fatorParaM = DIAMETER_CONV_TO_M[unidadeEntrada];
+        const fatorParaSaida = AREA_CONV_TO_M2[unidadeSaida];
+
+        for (let i = 0; i < diametrosIds.length; i++) {
+            const D_input = parseFloat(document.getElementById(diametrosIds[i]).value);
+            const areaInput = document.getElementById(areasIds[i]);
+
+            if (!isNaN(D_input) && D_input > 0) {
+                const D_metros = D_input * fatorParaM;
+                const Area_m2 = Math.PI * Math.pow(D_metros / 2, 2);
+                const Area_final = Area_m2 * fatorParaSaida;
+
+                areaInput.value = Area_final.toFixed(decimalPlaces) + ' ' + unidadeSaida;
+                areaTotalM2 += Area_m2;
+
+            } else {
+                areaInput.value = "N/A";
+            }
+        }
+
+        const Area_Total_Final = areaTotalM2 * fatorParaSaida;
+        document.getElementById('area_total').value = Area_Total_Final.toFixed(decimalPlaces) + ' ' + unidadeSaida;
+        
+        if (areaTotalM2 > 0) {
+            const Deq_m = 2 * Math.sqrt(areaTotalM2 / Math.PI);
+            
+            // Fator de conversão (Recíproco) de M para a unidade de entrada
+            const fatorDeMParaUnidadeEntrada = 1 / fatorParaM; 
+            const Deq_final = Deq_m * fatorDeMParaUnidadeEntrada;
+
+            document.getElementById('diametro_equivalente').value = Deq_final.toFixed(2) + ' ' + unidadeEntrada;
+        } else {
+            document.getElementById('diametro_equivalente').value = "N/A";
+        }
+    }
+
+    function limparCamposAreaCirculo() {
+        const diametrosIds = ['diametro_c1', 'diametro_c2', 'diametro_c3'];
+        const areasIds = ['area_c1', 'area_c2', 'area_c3'];
+
+        diametrosIds.forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        
+        areasIds.forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        
+        document.getElementById('area_total').value = '';
+        document.getElementById('diametro_equivalente').value = '';
+
+        alert("Campos de Diâmetros e Resultados limpos!");
+    }
+    
+    // --- CÁLCULO 5: Hazen-Williams (mantido) ---
+
+    function mudarModoHazenWilliams() {
+        const modo = document.querySelector('#hazen_williams input[name="hw_input_mode"]:checked').value;
+        const campoD_ou_A = document.getElementById('hw_campo_D_ou_A');
+        
+        let htmlContent = '';
+
+        if (modo === 'D') {
+            htmlContent = `
+                <label for="hw_diametro">Diâmetro Interno (D):</label>
+                <div class="input-inline-wrapper">
+                    <input type="number" id="hw_diametro" placeholder="Ex: 150">
+                    <select id="hw_unidade_D">
+                        <option value="m">metros (m)</option>
+                        <option value="mm" selected>milímetros (mm)</option>
+                        <option value="cm">centímetros (cm)</option>
+                    </select>
+                </div>
+            `;
+        } else {
+            htmlContent = `
+                <label for="hw_area">Área da Seção Transversal (A):</label>
+                <div class="input-inline-wrapper">
+                    <input type="number" id="hw_area" placeholder="Ex: 0.01767">
+                    <select id="hw_unidade_A">
+                        <option value="m2" selected>m²</option>
+                        <option value="mm2">mm²</option>
+                        <option value="cm2">cm²</option>
+                    </select>
+                </div>
+            `;
+        }
+
+        campoD_ou_A.innerHTML = htmlContent;
+        // Limpa só o resultado ao trocar de modo
+        document.getElementById('hw_resultado').value = '';
+    }
+
+    function calcularHazenWilliams() {
+        const modo = document.querySelector('#hazen_williams input[name="hw_input_mode"]:checked').value;
+        
+        const L_input = parseFloat(document.getElementById('hw_comprimento').value);
+        const unidade_L = document.getElementById('hw_unidade_L').value;
+        const C = parseFloat(document.getElementById('hw_coeficiente_C').value);
+
+        const Q_input = parseFloat(document.getElementById('hw_vazao').value);
+        const unidade_Q = document.getElementById('hw_unidade_Q').value;
+        
+        const resultadoInput = document.getElementById('hw_resultado');
+        resultadoInput.value = "";
+
+        if (isNaN(L_input) || isNaN(Q_input) || isNaN(C) || C <= 0) {
+            alert("Por favor, preencha Comprimento, Vazão e Coeficiente C com valores numéricos válidos (C deve ser maior que zero).");
+            return;
+        }
+
+        let D_m; 
+
+        if (modo === 'D') {
+            const D_input = parseFloat(document.getElementById('hw_diametro').value);
+            const unidade_D = document.getElementById('hw_unidade_D').value;
+
+            if (isNaN(D_input) || D_input <= 0) {
+                alert("Preencha o Diâmetro (D) com um valor válido.");
+                return;
+            }
+            D_m = D_input * DIAMETER_CONV_TO_M[unidade_D];
+
+        } else {
+            const A_input = parseFloat(document.getElementById('hw_area').value);
+            const unidade_A = document.getElementById('hw_unidade_A').value;
+            
+            if (isNaN(A_input) || A_input <= 0) {
+                alert("Preencha a Área (A) com um valor válido.");
+                return;
+            }
+            
+            const fatorDeAreaParaM2 = AREA_CONV_FROM_M2[unidade_A];
+            const A_m2 = A_input * fatorDeAreaParaM2;
+            
+            D_m = 2 * Math.sqrt(A_m2 / Math.PI);
+        }
+
+        if (D_m <= 0) {
+            alert("O Diâmetro calculado/informado é zero ou negativo.");
+            return;
+        }
+
+        const L_m = L_input * LENGTH_CONV_TO_M[unidade_L];
+        const Q_m3_s = Q_input / CONV_FACTORS[unidade_Q]; 
+        
+        const denominador = Math.pow(C, 1.852) * Math.pow(D_m, 4.87);
+
+        let hf = 0;
+
+        if (denominador > 0) {
+            hf = 10.67 * (L_m / denominador) * Math.pow(Q_m3_s, 1.852);
+        } else {
+            resultadoInput.value = "Erro (Divisão por zero)";
+            return;
+        }
+
+        resultadoInput.value = hf.toFixed(4) + ' m.c.a.';
+    }
+
+    function limparCamposHazenWilliams(clearInputs = true) {
+        if (clearInputs) {
+            document.getElementById('hw_comprimento').value = '';
+            document.getElementById('hw_vazao').value = '';
+            document.getElementById('hw_coeficiente_C').value = '';
+            
+            const modo = document.querySelector('#hazen_williams input[name="hw_input_mode"]:checked').value;
+            
+            // Limpa o campo variável D ou A
+            if (modo === 'D' && document.getElementById('hw_diametro')) {
+                document.getElementById('hw_diametro').value = '';
+            } else if (modo === 'A' && document.getElementById('hw_area')) {
+                document.getElementById('hw_area').value = '';
+            }
+            
+            // Resetar seleções de unidade para padrão (opcional)
+            document.getElementById('hw_unidade_L').value = 'm';
+            document.getElementById('hw_unidade_Q').value = 'L/s';
+            if (document.getElementById('hw_unidade_D')) {
+                document.getElementById('hw_unidade_D').value = 'mm';
+            } else if (document.getElementById('hw_unidade_A')) {
+                document.getElementById('hw_unidade_A').value = 'm2';
+            }
+
+        }
+        document.getElementById('hw_resultado').value = '';
+    }
+
+</script>
+
+<script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(registration => {
+            console.log('Service Worker registrado com sucesso:', registration.scope);
+          })
+          .catch(error => {
+            console.log('Falha ao registrar o Service Worker:', error);
+          });
+      });
+    }
+</script>
+
+</body>
+</html>
+Como transformar essa ferramenta em um app para android?
